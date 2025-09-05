@@ -1,4 +1,4 @@
-# Blob-Prompt-Manager
+# Blob Prompt Manager
 
 A Python class for managing prompts from local directories and Google Cloud Storage with versioning support.
 

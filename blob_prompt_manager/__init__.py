@@ -1,4 +1,4 @@
-"""Blob Storage Prompt Manager package."""
+"""Blob Prompt Manager package."""
 
 from blob_prompt_manager.prompt_manager import PromptManager
 

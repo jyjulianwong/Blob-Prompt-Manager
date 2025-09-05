@@ -1,4 +1,4 @@
-# Tests for Blob Storage Prompt Manager
+# Tests for Blob Prompt Manager
 
 This directory contains comprehensive unit tests for the `PromptManager` class using pytest.
 

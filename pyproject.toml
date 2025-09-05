@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "blob-prompt-manager"
 version = "0.1.0"
-description = "A Blob Storage Prompt Manager application."
+description = "A Blob Prompt Manager application."
 authors = [
     { name = "Julian Wong", email = "julianwong2000@gmail.com" }
 ]
