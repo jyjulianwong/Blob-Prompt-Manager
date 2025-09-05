@@ -1,0 +1,8 @@
+metric_1:
+  description: "This is a generic prompt."
+  synonyms:
+    - "Metric 1"
+    - "metric 1"
+    - "metric-1"
+  extraction_instructions: |
+    "Extract the following information from the text: [information]"
