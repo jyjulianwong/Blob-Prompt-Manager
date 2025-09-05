@@ -1,4 +1,4 @@
-# Blob-Storage-Prompt-Manager
+# Blob-Prompt-Manager
 
 A Python class for managing prompts from local directories and Google Cloud Storage with versioning support.
 
@@ -23,7 +23,7 @@ The `PromptManager` is an abstract base class that provides functionality to:
 ### 1. Implement the Abstract Method
 
 ```python
-from blob_storage_prompt_manager import PromptManager
+from blob_prompt_manager import PromptManager
 from typing import List
 
 class MyPromptManager(PromptManager):
@@ -94,7 +94,7 @@ prompt = manager.load_prompt(keys=["Goldman Sachs", "TVPI"], version="1.0.0")
 ### Brand-Metric Organization
 
 ```python
-from blob_storage_prompt_manager import BrandMetricPromptManager
+from blob_prompt_manager import BrandMetricPromptManager
 
 manager = BrandMetricPromptManager(
     gcs_bucket_name="my-bucket",
@@ -111,7 +111,7 @@ generic = manager.load_prompt(["Generic", "TVPI"], version="local")
 ### Hierarchical Organization
 
 ```python
-from blob_storage_prompt_manager import HierarchicalPromptManager
+from blob_prompt_manager import HierarchicalPromptManager
 
 manager = HierarchicalPromptManager()
 
@@ -160,7 +160,7 @@ gs://your-bucket/prompt-artifacts/
 1. Clone the repository.
 
 ```bash
-git clone https://github.com/jyjulianwong/Blob-Storage-Prompt-Manager.git
+git clone https://github.com/jyjulianwong/Blob-Prompt-Manager.git
 ```
 
 2. Verify that you have a compatible Python version installed on your machine.
@@ -172,12 +172,12 @@ python --version
 
 4. Install the development dependencies.
 ```bash
-cd Blob-Storage-Prompt-Manager/
+cd Blob-Prompt-Manager/
 uv sync --all-groups
 uv run pre-commit install
 ```
 
 5. Run the demo script.
 ```bash
-uv run blob_storage_prompt_manager/demo.py
+uv run blob_prompt_manager/demo.py
 ```

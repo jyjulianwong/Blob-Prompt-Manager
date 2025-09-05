@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 import yaml
 
-from blob_storage_prompt_manager.prompt_manager import PromptManager
+from blob_prompt_manager.prompt_manager import PromptManager
 
 from .conftest import ConcretePromptManager
 
@@ -26,9 +26,7 @@ class TestPromptManagerInit:
 
     def test_init_with_gcs_config(self):
         """Test initialization with GCS configuration."""
-        with patch(
-            "blob_storage_prompt_manager.prompt_manager.storage.Client"
-        ) as mock_client:
+        with patch("blob_prompt_manager.prompt_manager.storage.Client") as mock_client:
             manager = ConcretePromptManager(
                 local_dir_path="test_prompts",
                 gcs_bucket_name="test-bucket",
@@ -45,9 +43,7 @@ class TestPromptManagerInit:
 
     def test_init_with_gcs_no_credentials(self):
         """Test initialization with GCS but no credentials file."""
-        with patch(
-            "blob_storage_prompt_manager.prompt_manager.storage.Client"
-        ) as mock_client:
+        with patch("blob_prompt_manager.prompt_manager.storage.Client") as mock_client:
             manager = ConcretePromptManager(
                 gcs_bucket_name="test-bucket", gcs_dir_path="prompts"
             )

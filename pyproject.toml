@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "blob-storage-prompt-manager"
+name = "blob-prompt-manager"
 version = "0.1.0"
 description = "A Blob Storage Prompt Manager application."
 authors = [

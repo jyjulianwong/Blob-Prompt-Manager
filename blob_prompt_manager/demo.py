@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import List
 
-from blob_storage_prompt_manager.prompt_manager import PromptManager
+from blob_prompt_manager.prompt_manager import PromptManager
 
 
 class DemoPromptManager(PromptManager):

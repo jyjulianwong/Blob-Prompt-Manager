@@ -73,7 +73,7 @@ pytest tests/ -v
 pytest tests/test_prompt_manager.py::TestLocalPromptOperations -v
 
 # Run with coverage (if installed)
-pytest tests/ --cov=blob_storage_prompt_manager
+pytest tests/ --cov=blob_prompt_manager
 ```
 
 ## Test Fixtures

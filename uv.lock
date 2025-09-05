@@ -7,7 +7,7 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "blob-storage-prompt-manager"
+name = "blob-prompt-manager"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
