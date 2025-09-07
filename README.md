@@ -2,6 +2,10 @@
 
 A Python class for managing prompts from local directories and Google Cloud Storage with versioning support.
 
+## Why?
+
+Many existing prompt management solutions require complex deployments when self-hosted for team-wide use, depending on resources such as SQL and in-memory databases, and requiring the use of Docker and/or Kubernetes. This provides a simpler, alternative solution that **only** uses blob storage as the one shared resource, given that the vast majority of projects will already have this setup as part of its infrastructure. Instead of needing to host separately, this is a Python SDK that integrates directly with your existing source code and depends on your existing infrastructure.
+
 ## Overview
 
 The `PromptManager` is an abstract base class that provides functionality to:
