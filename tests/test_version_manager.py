@@ -12,7 +12,7 @@ from prompt2blob_vm.version_manager import VersionManager
 from .conftest import ConcreteVersionManager
 
 
-class TestPromptManagerInit:
+class TestVersionManagerInit:
     """Test VersionManager initialization."""
 
     def test_init_local_only(self):
@@ -50,6 +50,21 @@ class TestPromptManagerInit:
 
             mock_client.assert_called_once()
             assert manager._gcs_client is not None
+
+    def test_init_with_ignore_files(self):
+        """Test initialization with ignore_files parameter."""
+        ignore_patterns = ["*.log", "*.tmp", "cache/*"]
+        manager = ConcreteVersionManager(
+            local_dir_path="test_prompts", ignore_files=ignore_patterns
+        )
+
+        assert manager.ignore_files == ignore_patterns
+
+    def test_init_with_ignore_files_none(self):
+        """Test initialization with ignore_files=None."""
+        manager = ConcreteVersionManager(local_dir_path="test_prompts")
+
+        assert manager.ignore_files == []
 
 
 class TestLocalPromptOperations:
@@ -379,6 +394,92 @@ class TestSnapshotOperations:
                 version_manager_gcs.load_snapshot("1.0.0", str(existing_dir))
 
 
+class TestIgnoreFunctionality:
+    """Test ignore files functionality."""
+
+    def test_should_ignore_file_no_patterns(self):
+        """Test _should_ignore_file with no ignore patterns."""
+        manager = ConcreteVersionManager(local_dir_path="test_prompts")
+        test_file = Path("test_prompts/some_file.yaml")
+
+        assert not manager._should_ignore_file(test_file)
+
+    def test_should_ignore_file_with_patterns(self):
+        """Test _should_ignore_file with various patterns."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            prompts_dir = temp_path / "prompts"
+            prompts_dir.mkdir()
+
+            manager = ConcreteVersionManager(
+                local_dir_path=str(prompts_dir),
+                ignore_files=["*.log", "*.tmp", "cache/*", "temp_*"],
+            )
+
+            # Test files that should be ignored
+            log_file = prompts_dir / "debug.log"
+            tmp_file = prompts_dir / "temporary.tmp"
+            cache_file = prompts_dir / "cache" / "data.yaml"
+            temp_file = prompts_dir / "temp_backup.yaml"
+
+            assert manager._should_ignore_file(log_file)
+            assert manager._should_ignore_file(tmp_file)
+            assert manager._should_ignore_file(cache_file)
+            assert manager._should_ignore_file(temp_file)
+
+            # Test files that should not be ignored
+            yaml_file = prompts_dir / "prompt.yaml"
+            json_file = prompts_dir / "config.json"
+
+            assert not manager._should_ignore_file(yaml_file)
+            assert not manager._should_ignore_file(json_file)
+
+    def test_should_ignore_file_subdirectories(self):
+        """Test _should_ignore_file with files in subdirectories."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            prompts_dir = temp_path / "prompts"
+            prompts_dir.mkdir()
+
+            manager = ConcreteVersionManager(
+                local_dir_path=str(prompts_dir), ignore_files=["*.log", "subdir/*.tmp"]
+            )
+
+            # Test files in subdirectories
+            subdir_log = prompts_dir / "custom" / "brand1" / "debug.log"
+            subdir_tmp = prompts_dir / "subdir" / "temp.tmp"
+            subdir_yaml = prompts_dir / "subdir" / "prompt.yaml"
+
+            assert manager._should_ignore_file(subdir_log)  # *.log matches anywhere
+            assert manager._should_ignore_file(subdir_tmp)  # subdir/*.tmp matches
+            assert not manager._should_ignore_file(subdir_yaml)  # Not matching pattern
+
+    def test_should_ignore_gcs_path_no_patterns(self):
+        """Test _should_ignore_gcs_path with no ignore patterns."""
+        manager = ConcreteVersionManager(local_dir_path="test_prompts")
+
+        assert not manager._should_ignore_gcs_path("some/file.yaml")
+
+    def test_should_ignore_gcs_path_with_patterns(self):
+        """Test _should_ignore_gcs_path with various patterns."""
+        manager = ConcreteVersionManager(
+            local_dir_path="test_prompts",
+            ignore_files=["*.log", "*.tmp", "cache/*", "temp_*"],
+        )
+
+        # Test paths that should be ignored
+        assert manager._should_ignore_gcs_path("debug.log")
+        assert manager._should_ignore_gcs_path("temporary.tmp")
+        assert manager._should_ignore_gcs_path("cache/data.yaml")
+        assert manager._should_ignore_gcs_path("temp_backup.yaml")
+        assert manager._should_ignore_gcs_path("subdir/debug.log")
+
+        # Test paths that should not be ignored
+        assert not manager._should_ignore_gcs_path("prompt.yaml")
+        assert not manager._should_ignore_gcs_path("config.json")
+        assert not manager._should_ignore_gcs_path("subdir/prompt.yaml")
+
+
 class TestErrorHandling:
     """Test error handling and edge cases."""
 
@@ -467,3 +568,84 @@ class TestPrivateMethods:
                 version_manager_gcs._gcs_client.bucket.return_value.blob.return_value.upload_from_filename.call_count
                 == 1
             )
+
+    def test_upload_dir_to_gcs_with_ignore_files(self, version_manager_gcs):
+        """Test uploading local directory to GCS with ignore patterns."""
+        # Configure version manager with ignore patterns
+        version_manager_gcs.ignore_files = ["*.log", "*.tmp", "cache/*"]
+
+        mock_files = [
+            Mock(spec=Path),  # YAML file (should upload)
+            Mock(spec=Path),  # Log file (should ignore)
+            Mock(spec=Path),  # Tmp file (should ignore)
+            Mock(spec=Path),  # Cache file (should ignore)
+            Mock(spec=Path),  # Directory (should skip)
+        ]
+
+        # Configure mock files
+        mock_files[0].is_file.return_value = True
+        mock_files[0].relative_to.return_value = Path("generic/metric_1.yaml")
+        mock_files[1].is_file.return_value = True
+        mock_files[1].relative_to.return_value = Path("debug.log")
+        mock_files[2].is_file.return_value = True
+        mock_files[2].relative_to.return_value = Path("temp.tmp")
+        mock_files[3].is_file.return_value = True
+        mock_files[3].relative_to.return_value = Path("cache/data.yaml")
+        mock_files[4].is_file.return_value = False  # Directory
+
+        with patch("pathlib.Path.rglob", return_value=mock_files):
+            version_manager_gcs._upload_dir_to_gcs("1.0.0")
+
+            # Should only upload the YAML file (1 file), ignoring log, tmp, and cache files
+            assert (
+                version_manager_gcs._gcs_client.bucket.return_value.blob.call_count == 1
+            )
+            assert (
+                version_manager_gcs._gcs_client.bucket.return_value.blob.return_value.upload_from_filename.call_count
+                == 1
+            )
+
+            # Verify the correct file was uploaded
+            version_manager_gcs._gcs_client.bucket.return_value.blob.assert_called_with(
+                "test-prompts/Version 1.0.0/generic/metric_1.yaml"
+            )
+
+    def test_download_gcs_to_dir_with_ignore_files(self, version_manager_gcs):
+        """Test downloading GCS content to local directory with ignore patterns."""
+        # Configure version manager with ignore patterns
+        version_manager_gcs.ignore_files = ["*.log", "*.tmp", "cache/*"]
+
+        mock_blobs = [
+            Mock(),  # YAML file (should download)
+            Mock(),  # Log file (should ignore)
+            Mock(),  # Tmp file (should ignore)
+            Mock(),  # Cache file (should ignore)
+            Mock(),  # Directory marker (should skip)
+        ]
+
+        # Set proper name attributes
+        mock_blobs[0].name = "test-prompts/Version 1.0.0/generic/metric_1.yaml"
+        mock_blobs[1].name = "test-prompts/Version 1.0.0/debug.log"
+        mock_blobs[2].name = "test-prompts/Version 1.0.0/temp.tmp"
+        mock_blobs[3].name = "test-prompts/Version 1.0.0/cache/data.yaml"
+        mock_blobs[4].name = "test-prompts/Version 1.0.0/"  # Directory marker
+
+        # Configure mock blobs
+        for blob in mock_blobs:
+            blob.download_to_filename = Mock()
+
+        version_manager_gcs._gcs_client.bucket.return_value.list_blobs.return_value = (
+            mock_blobs
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir)
+
+            version_manager_gcs._download_gcs_to_dir("1.0.0", target_dir)
+
+            # Verify only the YAML file was downloaded (ignored log, tmp, cache files)
+            assert mock_blobs[0].download_to_filename.called  # YAML file
+            assert not mock_blobs[1].download_to_filename.called  # Log file (ignored)
+            assert not mock_blobs[2].download_to_filename.called  # Tmp file (ignored)
+            assert not mock_blobs[3].download_to_filename.called  # Cache file (ignored)
+            assert not mock_blobs[4].download_to_filename.called  # Directory marker

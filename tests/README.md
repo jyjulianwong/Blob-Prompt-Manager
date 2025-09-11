@@ -11,7 +11,7 @@ This directory contains comprehensive unit tests for the `VersionManager` class 
 
 The test suite covers the following areas:
 
-### 1. Initialization (`TestPromptManagerInit`)
+### 1. Initialization (`TestVersionManagerInit`)
 - Local-only initialization
 - GCS configuration with and without credentials
 - Parameter validation

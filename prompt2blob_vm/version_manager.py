@@ -1,5 +1,6 @@
 """VersionManager class for managing prompts locally and in Google Cloud Storage."""
 
+import fnmatch
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -25,6 +26,7 @@ class VersionManager(ABC):
         gcs_bucket_name: Optional[str] = None,
         gcs_dir_path: Optional[str] = None,
         gcs_credentials_path: Optional[str] = None,
+        ignore_files: Optional[List[str]] = None,
     ):
         """
         Initialize the VersionManager.
@@ -34,10 +36,12 @@ class VersionManager(ABC):
             gcs_bucket_name: Google Cloud Storage bucket name for versioned prompts
             gcs_dir_path: Path within the GCS bucket to store versioned prompt folders
             gcs_credentials_path: Path to GCS credentials JSON file (optional)
+            ignore_files: List of file patterns to ignore during snapshot operations (optional)
         """
         self.local_dir_path = Path(local_dir_path)
         self.gcs_bucket_name = gcs_bucket_name
         self.gcs_dir_path = gcs_dir_path.rstrip("/") if gcs_dir_path else None
+        self.ignore_files = ignore_files or []
 
         # Initialize GCS client if bucket is provided
         self._gcs_client = None
@@ -67,6 +71,47 @@ class VersionManager(ABC):
             raise ValueError("GCS configuration required for this operation")
 
         return self._gcs_client
+
+    def _should_ignore_file(self, file_path: Path) -> bool:
+        """
+        Check if a file should be ignored based on the ignore_files patterns.
+
+        Args:
+            file_path: Path to the file to check
+
+        Returns:
+            bool: True if the file should be ignored, False otherwise
+        """
+        if not self.ignore_files:
+            return False
+
+        # Convert to string and use relative path for pattern matching
+        file_str = str(file_path.relative_to(self.local_dir_path))
+
+        for pattern in self.ignore_files:
+            if fnmatch.fnmatch(file_str, pattern):
+                return True
+
+        return False
+
+    def _should_ignore_gcs_path(self, relative_path: str) -> bool:
+        """
+        Check if a GCS file path should be ignored based on the ignore_files patterns.
+
+        Args:
+            relative_path: Relative path of the file within the prompts directory
+
+        Returns:
+            bool: True if the file should be ignored, False otherwise
+        """
+        if not self.ignore_files:
+            return False
+
+        for pattern in self.ignore_files:
+            if fnmatch.fnmatch(relative_path, pattern):
+                return True
+
+        return False
 
     def _load_local_prompt(self, keys: List[str]) -> Dict[str, Any]:
         """
@@ -196,6 +241,10 @@ class VersionManager(ABC):
 
         for file_path in self.local_dir_path.rglob("*"):
             if file_path.is_file():
+                # Skip ignored files
+                if self._should_ignore_file(file_path):
+                    continue
+
                 # Calculate relative path from prompts directory
                 relative_path = file_path.relative_to(self.local_dir_path)
 
@@ -232,6 +281,10 @@ class VersionManager(ABC):
 
             # Calculate the relative path within the version folder
             relative_path = blob.name[len(version_prefix) :]
+
+            # Skip ignored files
+            if self._should_ignore_gcs_path(relative_path):
+                continue
 
             # Create the target file path
             target_file_path = target_dir / relative_path
