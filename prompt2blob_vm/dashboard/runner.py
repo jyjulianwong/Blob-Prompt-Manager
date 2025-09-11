@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Launcher script for the Prompt Manager Dashboard."""
+"""Launcher script for the Version Manager Dashboard."""
 
 import argparse
 import sys
@@ -10,25 +10,25 @@ from typing import Optional
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from blob_prompt_manager.prompt_manager import PromptManager  # noqa: E402
+from prompt2blob_vm.version_manager import VersionManager  # noqa: E402
 
 # Global variable to store the prompt manager instance
 _prompt_manager_instance = None
 
 
 def run_dashboard(
-    prompt_manager: PromptManager, port: int = 8501, host: str = "localhost"
+    version_manager: VersionManager, port: int = 8501, host: str = "localhost"
 ):
-    """Launch the dashboard with a specific PromptManager instance.
+    """Launch the dashboard with a specific VersionManager instance.
 
     Args:
-        prompt_manager: The PromptManager instance to use in the dashboard
+        version_manager: The VersionManager instance to use in the dashboard
         port: Port to run the dashboard on (default: 8501)
         host: Host to run the dashboard on (default: localhost)
     """
     # Store the prompt manager instance globally so the Streamlit app can access it
     global _prompt_manager_instance
-    _prompt_manager_instance = prompt_manager
+    _prompt_manager_instance = version_manager
 
     # Import Streamlit
     try:
@@ -39,12 +39,12 @@ def run_dashboard(
         sys.exit(1)
 
     # Set app file path
-    app_file = project_root / "blob_prompt_manager" / "dashboard" / "app.py"
-    print("🚀 Launching Blob Prompt Manager Dashboard...")
-    print(f"🎯 Manager: {type(prompt_manager).__name__}")
-    print(f"📁 Local Dir: {prompt_manager.local_dir_path}")
-    if hasattr(prompt_manager, "gcs_bucket_name") and prompt_manager.gcs_bucket_name:
-        print(f"☁️ GCS Bucket: {prompt_manager.gcs_bucket_name}")
+    app_file = project_root / "prompt2blob_vm" / "dashboard" / "app.py"
+    print("🚀 Launching Prompt2Blob Version Manager Dashboard...")
+    print(f"🎯 Manager: {type(version_manager).__name__}")
+    print(f"📁 Local Dir: {version_manager.local_dir_path}")
+    if hasattr(version_manager, "gcs_bucket_name") and version_manager.gcs_bucket_name:
+        print(f"☁️ GCS Bucket: {version_manager.gcs_bucket_name}")
 
     # Check if app file exists
     if not app_file.exists():
@@ -72,11 +72,11 @@ def run_dashboard(
     stcli.main()
 
 
-def get_prompt_manager() -> Optional[PromptManager]:
+def get_prompt_manager() -> Optional[VersionManager]:
     """Get the globally stored prompt manager instance.
 
     Returns:
-        The PromptManager instance if available, None otherwise
+        The VersionManager instance if available, None otherwise
     """
     return _prompt_manager_instance
 
@@ -84,11 +84,11 @@ def get_prompt_manager() -> Optional[PromptManager]:
 def main():
     """Main launcher function for command line usage."""
     parser = argparse.ArgumentParser(
-        description="Launch the Prompt Manager Dashboard",
+        description="Launch the Version Manager Dashboard",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python runner.py                    # Launch dashboard (requires prompt_manager parameter)
+  python runner.py                    # Launch dashboard (requires version_manager parameter)
   python runner.py --port 8502        # Launch on custom port
   
 Note: This script is primarily intended to be used programmatically.
@@ -111,14 +111,14 @@ For direct usage, use runner_demo.py instead.
 
     # args = parser.parse_args()
 
-    print("❌ Error: This script requires a PromptManager instance.")
+    print("❌ Error: This script requires a VersionManager instance.")
     print(
         "💡 Use runner_demo.py for a working example, or call run_dashboard() programmatically."
     )
     print("")
     print("Example usage in code:")
-    print("  from blob_prompt_manager.dashboard.runner import run_dashboard")
-    print("  from blob_prompt_manager.examples import BrandMetricPromptManager")
+    print("  from prompt2blob_vm.dashboard.runner import run_dashboard")
+    print("  from prompt2blob_vm.examples import BrandMetricPromptManager")
     print("  ")
     print("  manager = BrandMetricPromptManager(local_dir_path='prompts')")
     print("  run_dashboard(manager, port=8501)")

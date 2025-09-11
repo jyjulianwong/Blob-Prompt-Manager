@@ -1,4 +1,4 @@
-# Blob Prompt Manager
+# Prompt2Blob Version Manager
 
 A Python class for managing prompts from local directories and Google Cloud Storage with versioning support.
 
@@ -8,7 +8,7 @@ Many existing prompt management solutions require complex deployments when self-
 
 ## Overview
 
-The `PromptManager` is an abstract base class that provides functionality to:
+The `VersionManager` is an abstract base class that provides functionality to:
 - Load prompts from local YAML files
 - Save snapshots of local prompts to Google Cloud Storage with semantic versioning
 - Load prompts from specific versions stored in GCS
@@ -27,10 +27,10 @@ The `PromptManager` is an abstract base class that provides functionality to:
 ### 1. Implement the Abstract Method
 
 ```python
-from blob_prompt_manager import PromptManager
+from prompt2blob_vm import VersionManager
 from typing import List
 
-class MyPromptManager(PromptManager):
+class MyPromptManager(VersionManager):
     def get_prompt_file_path(self, keys: List[str]) -> str:
         """Map keys to file paths relative to prompts/ directory."""
         brand, metric = keys
@@ -65,7 +65,7 @@ prompt = manager.load_prompt(keys=["Goldman Sachs", "TVPI"], version="1.0.0")
 
 ## API Reference
 
-### PromptManager Class
+### `VersionManager` Class
 
 #### Constructor Parameters
 
@@ -98,7 +98,7 @@ prompt = manager.load_prompt(keys=["Goldman Sachs", "TVPI"], version="1.0.0")
 ### Brand-Metric Organization
 
 ```python
-from blob_prompt_manager import BrandMetricPromptManager
+from prompt2blob_vm import BrandMetricPromptManager
 
 manager = BrandMetricPromptManager(
     gcs_bucket_name="my-bucket",
@@ -115,7 +115,7 @@ generic = manager.load_prompt(["Generic", "TVPI"], version="local")
 ### Hierarchical Organization
 
 ```python
-from blob_prompt_manager import HierarchicalPromptManager
+from prompt2blob_vm import HierarchicalPromptManager
 
 manager = HierarchicalPromptManager()
 
@@ -164,7 +164,7 @@ gs://your-bucket/prompt-artifacts/
 1. Clone the repository.
 
 ```bash
-git clone https://github.com/jyjulianwong/Blob-Prompt-Manager.git
+git clone https://github.com/jyjulianwong/Prompt2Blob-VM.git
 ```
 
 2. Verify that you have a compatible Python version installed on your machine.
@@ -176,12 +176,12 @@ python --version
 
 4. Install the development dependencies.
 ```bash
-cd Blob-Prompt-Manager/
+cd Prompt2Blob-VM/
 uv sync --all-groups
 uv run pre-commit install
 ```
 
 5. Run the demo script.
 ```bash
-uv run blob_prompt_manager/demo.py
+uv run prompt2blob_vm/demo.py
 ```

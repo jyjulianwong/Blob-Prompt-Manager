@@ -1,4 +1,4 @@
-"""Pytest configuration and fixtures for PromptManager tests."""
+"""Pytest configuration and fixtures for VersionManager tests."""
 
 import tempfile
 from pathlib import Path
@@ -7,11 +7,11 @@ from unittest.mock import Mock
 import pytest
 import yaml
 
-from blob_prompt_manager.prompt_manager import PromptManager
+from prompt2blob_vm.version_manager import VersionManager
 
 
-class ConcretePromptManager(PromptManager):
-    """Concrete implementation of PromptManager for testing."""
+class ConcreteVersionManager(VersionManager):
+    """Concrete implementation of VersionManager for testing."""
 
     def get_prompt_file_path(self, keys: list[str]) -> str:
         """
@@ -93,15 +93,15 @@ def mock_gcs_client():
 
 
 @pytest.fixture
-def prompt_manager_local(temp_prompts_dir):
-    """Create a PromptManager instance configured for local-only operations."""
-    return ConcretePromptManager(local_dir_path=temp_prompts_dir)
+def version_manager_local(temp_prompts_dir):
+    """Create a VersionManager instance configured for local-only operations."""
+    return ConcreteVersionManager(local_dir_path=temp_prompts_dir)
 
 
 @pytest.fixture
-def prompt_manager_gcs(temp_prompts_dir, mock_gcs_client):
-    """Create a PromptManager instance configured with mocked GCS."""
-    manager = ConcretePromptManager(
+def version_manager_gcs(temp_prompts_dir, mock_gcs_client):
+    """Create a VersionManager instance configured with mocked GCS."""
+    manager = ConcreteVersionManager(
         local_dir_path=temp_prompts_dir,
         gcs_bucket_name="test-bucket",
         gcs_dir_path="test-prompts",

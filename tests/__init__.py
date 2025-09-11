@@ -1,1 +1,1 @@
-"""Tests package for blob_prompt_manager."""
+"""Tests package for prompt2blob_vm."""

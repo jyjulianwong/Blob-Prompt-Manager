@@ -1,11 +1,11 @@
-# Tests for Blob Prompt Manager
+# Tests for Prompt2Blob Version Manager
 
-This directory contains comprehensive unit tests for the `PromptManager` class using pytest.
+This directory contains comprehensive unit tests for the `VersionManager` class using pytest.
 
 ## Test Structure
 
-- **`conftest.py`**: Contains pytest fixtures and a concrete implementation of the abstract `PromptManager` class for testing
-- **`test_prompt_manager.py`**: Main test suite with comprehensive test coverage
+- **`conftest.py`**: Contains pytest fixtures and a concrete implementation of the abstract `VersionManager` class for testing
+- **`test_version_manager.py`**: Main test suite with comprehensive test coverage
 
 ## Test Coverage
 
@@ -70,10 +70,10 @@ pytest tests/
 pytest tests/ -v
 
 # Run specific test class
-pytest tests/test_prompt_manager.py::TestLocalPromptOperations -v
+pytest tests/test_version_manager.py::TestLocalPromptOperations -v
 
 # Run with coverage (if installed)
-pytest tests/ --cov=blob_prompt_manager
+pytest tests/ --cov=prompt2blob_vm
 ```
 
 ## Test Fixtures
@@ -82,13 +82,13 @@ Key fixtures provided in `conftest.py`:
 
 - `temp_prompts_dir`: Creates a temporary directory with sample YAML files
 - `mock_gcs_client`: Provides a mocked GCS client with common operations
-- `prompt_manager_local`: PromptManager instance configured for local operations
-- `prompt_manager_gcs`: PromptManager instance configured with mocked GCS
+- `version_manager_local`: VersionManager instance configured for local operations
+- `version_manager_gcs`: VersionManager instance configured with mocked GCS
 - `sample_yaml_content`: Sample YAML content for testing
 
 ## Test Data
 
-The test suite uses realistic sample data that mirrors the structure expected by the PromptManager:
+The test suite uses realistic sample data that mirrors the structure expected by the VersionManager:
 
 ```yaml
 metric_1:

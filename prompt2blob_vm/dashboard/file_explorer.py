@@ -3,15 +3,15 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from blob_prompt_manager.prompt_manager import PromptManager
+from prompt2blob_vm.version_manager import VersionManager
 
 
 class GCSFileExplorer:
     """Enhanced GCS file explorer for the dashboard."""
 
-    def __init__(self, prompt_manager: PromptManager):
+    def __init__(self, version_manager: VersionManager):
         """Initialize with a prompt manager instance."""
-        self.prompt_manager = prompt_manager
+        self.version_manager = version_manager
 
     def list_files_in_version(self, version: str) -> List[Dict[str, str]]:
         """
@@ -23,14 +23,14 @@ class GCSFileExplorer:
         Returns:
             List of dictionaries containing file information
         """
-        if not self.prompt_manager.gcs_bucket_name:
+        if not self.version_manager.gcs_bucket_name:
             return []
 
         try:
-            gcs_client = self.prompt_manager._get_gcs_client()
-            bucket = gcs_client.bucket(self.prompt_manager.gcs_bucket_name)
+            gcs_client = self.version_manager._get_gcs_client()
+            bucket = gcs_client.bucket(self.version_manager.gcs_bucket_name)
 
-            version_prefix = f"{self.prompt_manager.gcs_dir_path}/Version {version}/"
+            version_prefix = f"{self.version_manager.gcs_dir_path}/Version {version}/"
             blobs = bucket.list_blobs(prefix=version_prefix)
 
             files = []
@@ -67,15 +67,15 @@ class GCSFileExplorer:
         Returns:
             File content as string or None if not found
         """
-        if not self.prompt_manager.gcs_bucket_name:
+        if not self.version_manager.gcs_bucket_name:
             return None
 
         try:
-            gcs_client = self.prompt_manager._get_gcs_client()
-            bucket = gcs_client.bucket(self.prompt_manager.gcs_bucket_name)
+            gcs_client = self.version_manager._get_gcs_client()
+            bucket = gcs_client.bucket(self.version_manager.gcs_bucket_name)
 
             gcs_file_path = (
-                f"{self.prompt_manager.gcs_dir_path}/Version {version}/{file_path}"
+                f"{self.version_manager.gcs_dir_path}/Version {version}/{file_path}"
             )
             blob = bucket.blob(gcs_file_path)
 

@@ -1,11 +1,11 @@
-"""Example implementations of PromptManager for different use cases."""
+"""Example implementations of VersionManager for different use cases."""
 
 from typing import List
 
-from blob_prompt_manager.prompt_manager import PromptManager
+from prompt2blob_vm.version_manager import VersionManager
 
 
-class BrandMetricPromptManager(PromptManager):
+class BrandMetricPromptManager(VersionManager):
     """
     Example implementation for brand-specific metric prompts.
 
@@ -48,7 +48,7 @@ class BrandMetricPromptManager(PromptManager):
         return name.lower().replace(" ", "_").replace("-", "_")
 
 
-class HierarchicalPromptManager(PromptManager):
+class HierarchicalPromptManager(VersionManager):
     """
     Example implementation for hierarchical prompt organization.
 

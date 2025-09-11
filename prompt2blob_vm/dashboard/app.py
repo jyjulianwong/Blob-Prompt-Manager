@@ -8,23 +8,23 @@ import streamlit as st
 import yaml
 from streamlit_ace import st_ace
 
-from blob_prompt_manager.dashboard.file_explorer import (
+from prompt2blob_vm.dashboard.file_explorer import (
     GCSFileExplorer,
     LocalFileExplorer,
 )
-from blob_prompt_manager.prompt_manager import PromptManager
+from prompt2blob_vm.version_manager import VersionManager
 
 
 class PromptDashboard:
     """Comprehensive dashboard for prompt management with all features."""
 
-    def __init__(self, prompt_manager: PromptManager):
-        """Initialize the dashboard with a PromptManager instance.
+    def __init__(self, version_manager: VersionManager):
+        """Initialize the dashboard with a VersionManager instance.
 
         Args:
-            prompt_manager: An instance of PromptManager or its subclasses
+            version_manager: An instance of VersionManager or its subclasses
         """
-        self.prompt_manager = prompt_manager
+        self.version_manager = version_manager
         self._init_session_state()
         self._init_file_explorers()
 
@@ -51,19 +51,19 @@ class PromptDashboard:
         try:
             # Check if GCS is configured
             if (
-                hasattr(self.prompt_manager, "gcs_bucket_name")
-                and self.prompt_manager.gcs_bucket_name
-                and hasattr(self.prompt_manager, "gcs_dir_path")
-                and self.prompt_manager.gcs_dir_path
+                hasattr(self.version_manager, "gcs_bucket_name")
+                and self.version_manager.gcs_bucket_name
+                and hasattr(self.version_manager, "gcs_dir_path")
+                and self.version_manager.gcs_dir_path
             ):
                 st.session_state.gcs_configured = True
-                self.gcs_explorer = GCSFileExplorer(self.prompt_manager)
+                self.gcs_explorer = GCSFileExplorer(self.version_manager)
             else:
                 st.session_state.gcs_configured = False
                 self.gcs_explorer = None
 
             # Initialize local explorer with the prompt manager's local directory
-            local_dir = str(self.prompt_manager.local_dir_path)
+            local_dir = str(self.version_manager.local_dir_path)
             self.local_explorer = LocalFileExplorer(local_dir)
 
         except Exception as e:
@@ -80,13 +80,13 @@ class PromptDashboard:
             st.header("📊 Dashboard Statistics")
 
             # Show prompt manager info
-            st.subheader("PromptManager Info")
-            st.info(f"**Type:** {type(self.prompt_manager).__name__}")
-            st.info(f"**Local Dir:** {self.prompt_manager.local_dir_path}")
+            st.subheader("VersionManager Info")
+            st.info(f"**Type:** {type(self.version_manager).__name__}")
+            st.info(f"**Local Dir:** {self.version_manager.local_dir_path}")
 
             if st.session_state.gcs_configured:
-                st.info(f"**GCS Bucket:** {self.prompt_manager.gcs_bucket_name}")
-                st.info(f"**GCS Path:** {self.prompt_manager.gcs_dir_path}")
+                st.info(f"**GCS Bucket:** {self.version_manager.gcs_bucket_name}")
+                st.info(f"**GCS Path:** {self.version_manager.gcs_dir_path}")
 
             # Local file stats
             st.subheader("File Statistics")
@@ -95,9 +95,9 @@ class PromptDashboard:
             st.metric("Local Size", f"{local_stats['total_size']:,} bytes")
 
             # GCS version count
-            if st.session_state.gcs_configured and self.prompt_manager:
+            if st.session_state.gcs_configured and self.version_manager:
                 try:
-                    versions = self.prompt_manager.list_versions()
+                    versions = self.version_manager.list_versions()
                     st.metric("GCS Versions", len(versions))
                 except Exception:
                     st.metric("GCS Versions", "Error")
@@ -173,9 +173,9 @@ class PromptDashboard:
 
         # Version selector
         versions = ["local"]
-        if st.session_state.gcs_configured and self.prompt_manager:
+        if st.session_state.gcs_configured and self.version_manager:
             try:
-                gcs_versions = self.prompt_manager.list_versions()
+                gcs_versions = self.version_manager.list_versions()
                 versions.extend(gcs_versions)
             except Exception as e:
                 st.warning(f"Could not fetch GCS versions: {e}")
@@ -195,7 +195,7 @@ class PromptDashboard:
                 files = self.local_explorer.search_files(st.session_state.search_query)
             else:
                 # Get all local files
-                local_dir = Path(self.prompt_manager.local_dir_path)
+                local_dir = Path(self.version_manager.local_dir_path)
                 files = []
                 if local_dir.exists():
                     for file_path in local_dir.rglob("*.yaml"):
@@ -251,7 +251,7 @@ class PromptDashboard:
 
     def _load_file_content(self, file_path: str, version: str = "local") -> str:
         """Load file content with enhanced error handling."""
-        if not self.prompt_manager:
+        if not self.version_manager:
             return "Error: Prompt manager not initialized"
 
         try:
@@ -366,7 +366,7 @@ class PromptDashboard:
 
         st.subheader("🔄 Version Comparison")
 
-        versions = ["local"] + self.prompt_manager.list_versions()
+        versions = ["local"] + self.version_manager.list_versions()
 
         col1, col2 = st.columns(2)
         with col1:
@@ -407,7 +407,7 @@ class PromptDashboard:
 
         # Version overview
         try:
-            versions = self.prompt_manager.list_versions()
+            versions = self.version_manager.list_versions()
             if versions:
                 st.write(f"**Available Versions:** {len(versions)}")
 
@@ -447,7 +447,7 @@ class PromptDashboard:
                 try:
                     with st.spinner("Creating snapshot..."):
                         # pyrefly: ignore
-                        new_version = self.prompt_manager.save_snapshot(bump_type)
+                        new_version = self.version_manager.save_snapshot(bump_type)
                     st.success(f"✅ Snapshot created: Version {new_version}")
                     st.rerun()
                 except Exception as e:
@@ -456,7 +456,7 @@ class PromptDashboard:
         with col2:
             st.write("**Load Version**")
             versions = (
-                self.prompt_manager.list_versions() if self.prompt_manager else []
+                self.version_manager.list_versions() if self.version_manager else []
             )
             if versions:
                 version_to_load = st.selectbox(
@@ -469,7 +469,7 @@ class PromptDashboard:
                     if st.checkbox("⚠️ I understand this will replace local files"):
                         try:
                             with st.spinner("Loading version..."):
-                                target_dir = self.prompt_manager.load_snapshot(
+                                target_dir = self.version_manager.load_snapshot(
                                     version_to_load, replace=True
                                 )
                             st.success(
@@ -484,18 +484,18 @@ class PromptDashboard:
     def run(self) -> None:
         """Run the enhanced dashboard application."""
         st.set_page_config(
-            page_title="Enhanced Prompt Manager Dashboard",
+            page_title="Enhanced Version Manager Dashboard",
             page_icon="📝",
             layout="wide",
             initial_sidebar_state="expanded",
         )
 
-        st.title("📝 Prompt Manager Dashboard")
+        st.title("📝 Version Manager Dashboard")
         st.markdown(
             "Comprehensive prompt management with local files and Google Cloud Storage integration."
         )
 
-        if not self.prompt_manager:
+        if not self.version_manager:
             st.error("❌ No prompt manager provided to the dashboard.")
             return
 
@@ -528,36 +528,36 @@ class PromptDashboard:
         st.markdown(
             """
             <div style='text-align: center; color: #666; padding: 20px;'>
-                <small>Blob Prompt Manager Dashboard | Built with Streamlit</small>
+                <small>Prompt2Blob Version Manager Dashboard | Built with Streamlit</small>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
 
-def main(prompt_manager: PromptManager | None = None):
+def main(version_manager: VersionManager | None = None):
     """Main entry point for the Streamlit app.
 
     Args:
-        prompt_manager: Optional PromptManager instance. If not provided,
+        version_manager: Optional VersionManager instance. If not provided,
                        will show an error message.
     """
-    if prompt_manager is None:
-        st.error("❌ No PromptManager instance provided to the dashboard.")
-        st.info("Please provide a PromptManager instance when calling main().")
+    if version_manager is None:
+        st.error("❌ No VersionManager instance provided to the dashboard.")
+        st.info("Please provide a VersionManager instance when calling main().")
         return
 
-    dashboard = PromptDashboard(prompt_manager)
+    dashboard = PromptDashboard(version_manager)
     dashboard.run()
 
 
 if __name__ == "__main__":
     # Get the prompt manager instance from the runner module
     try:
-        from blob_prompt_manager.dashboard.runner import get_prompt_manager
+        from prompt2blob_vm.dashboard.runner import get_prompt_manager
 
-        prompt_manager = get_prompt_manager()
+        version_manager = get_prompt_manager()
     except ImportError:
-        prompt_manager = None
+        version_manager = None
 
-    main(prompt_manager)
+    main(version_manager)

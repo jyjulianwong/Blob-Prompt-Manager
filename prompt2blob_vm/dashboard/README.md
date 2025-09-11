@@ -1,4 +1,4 @@
-# Blob Prompt Manager Dashboard
+# Prompt2Blob Version Manager Dashboard
 
 A comprehensive Streamlit-based web interface for managing and viewing prompt versions from both local files and Google Cloud Storage.
 
@@ -20,7 +20,7 @@ A comprehensive Streamlit-based web interface for managing and viewing prompt ve
 
 ### 1. Install Dependencies
 ```bash
-cd Blob-Prompt-Manager/
+cd Prompt2Blob-VM/
 uv sync --all-groups
 ```
 
@@ -28,7 +28,7 @@ uv sync --all-groups
 
 #### From Dashboard Directory
 ```bash
-cd blob_prompt_manager/dashboard/
+cd prompt2blob_vm/dashboard/
 uv run runner.py
 ```
 
@@ -73,7 +73,7 @@ In the sidebar, configure:
 ## File Structure
 
 ```
-blob_prompt_manager/dashboard/
+prompt2blob_vm/dashboard/
 ├── __init__.py              # Module initialization
 ├── app.py                   # Comprehensive dashboard with all features
 ├── file_explorer.py            # GCS integration utilities
@@ -128,16 +128,16 @@ streamlit run enhanced_app.py --logger.level=debug
 4. Test with both local and GCS configurations
 
 ### Custom Prompt Managers
-The dashboard works with any `PromptManager` subclass. To use a custom implementation:
+The dashboard works with any `VersionManager` subclass. To use a custom implementation:
 
 ```python
 from your_module import CustomPromptManager
-from blob_prompt_manager.dashboard.app import PromptDashboard
+from prompt2blob_vm.dashboard.app import PromptDashboard
 
 class CustomDashboard(PromptDashboard):
     def _init_prompt_manager(self):
         # Initialize with your custom manager
-        self.prompt_manager = CustomPromptManager(...)
+        self.version_manager = CustomPromptManager(...)
 ```
 
 ## API Reference

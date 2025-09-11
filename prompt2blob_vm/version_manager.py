@@ -1,4 +1,4 @@
-"""PromptManager class for managing prompts locally and in Google Cloud Storage."""
+"""VersionManager class for managing prompts locally and in Google Cloud Storage."""
 
 import shutil
 from abc import ABC, abstractmethod
@@ -10,7 +10,7 @@ from google.cloud import storage
 from packaging import version
 
 
-class PromptManager(ABC):
+class VersionManager(ABC):
     """
     Abstract base class for managing prompts from local directory or Google Cloud Storage.
 
@@ -27,12 +27,12 @@ class PromptManager(ABC):
         gcs_credentials_path: Optional[str] = None,
     ):
         """
-        Initialize the PromptManager.
+        Initialize the VersionManager.
 
         Args:
+            local_dir_path: Local directory containing prompts (default: "prompts")
             gcs_bucket_name: Google Cloud Storage bucket name for versioned prompts
             gcs_dir_path: Path within the GCS bucket to store versioned prompt folders
-            local_dir_path: Local directory containing prompts (default: "prompts")
             gcs_credentials_path: Path to GCS credentials JSON file (optional)
         """
         self.local_dir_path = Path(local_dir_path)
@@ -50,7 +50,15 @@ class PromptManager(ABC):
                 self._gcs_client = storage.Client()
 
     def _get_gcs_client(self) -> storage.Client:
-        """Get GCS client."""
+        """
+        Get GCS client.
+
+        Returns:
+            storage.Client: The Google Cloud Storage client instance
+
+        Raises:
+            ValueError: If GCS configuration is not properly set up
+        """
         if (
             self._gcs_client is None
             or not self.gcs_bucket_name
@@ -61,7 +69,18 @@ class PromptManager(ABC):
         return self._gcs_client
 
     def _load_local_prompt(self, keys: List[str]) -> Dict[str, Any]:
-        """Load prompt from local directory."""
+        """
+        Load prompt from local directory.
+
+        Args:
+            keys: List of keys identifying the prompt
+
+        Returns:
+            Dict[str, Any]: Dictionary containing the parsed YAML content
+
+        Raises:
+            FileNotFoundError: If the prompt file is not found in the local directory
+        """
         file_path = self.get_prompt_file_path(keys)
         full_path = self.local_dir_path / file_path
 
@@ -72,7 +91,20 @@ class PromptManager(ABC):
             return yaml.safe_load(f)
 
     def _load_gcs_prompt(self, keys: List[str], version: str) -> Dict[str, Any]:
-        """Load prompt from GCS versioned folder."""
+        """
+        Load prompt from GCS versioned folder.
+
+        Args:
+            keys: List of keys identifying the prompt
+            version: Version number to load from GCS
+
+        Returns:
+            Dict[str, Any]: Dictionary containing the parsed YAML content
+
+        Raises:
+            ValueError: If GCS configuration is not properly set up
+            FileNotFoundError: If the prompt file is not found in the specified GCS version
+        """
         gcs_client = self._get_gcs_client()
 
         file_path = self.get_prompt_file_path(keys)
@@ -88,7 +120,18 @@ class PromptManager(ABC):
         return yaml.safe_load(content)
 
     def _get_next_version(self, bump_type: Literal["major", "minor", "patch"]) -> str:
-        """Calculate the next version number based on existing versions in GCS."""
+        """
+        Calculate the next version number based on existing versions in GCS.
+
+        Args:
+            bump_type: Type of version bump to perform ("major", "minor", or "patch")
+
+        Returns:
+            str: The next version number (e.g., "1.0.0", "0.1.0", "0.0.1")
+
+        Raises:
+            ValueError: If GCS configuration is not properly set up
+        """
         gcs_client = self._get_gcs_client()
 
         bucket = gcs_client.bucket(self.gcs_bucket_name)
@@ -138,7 +181,15 @@ class PromptManager(ABC):
         return str(next_version)
 
     def _upload_dir_to_gcs(self, version: str) -> None:
-        """Upload the entire local prompts directory to GCS under a version folder."""
+        """
+        Upload the entire local prompts directory to GCS under a version folder.
+
+        Args:
+            version: Version number to use for the GCS folder name
+
+        Raises:
+            ValueError: If GCS configuration is not properly set up
+        """
         gcs_client = self._get_gcs_client()
 
         bucket = gcs_client.bucket(self.gcs_bucket_name)
@@ -156,7 +207,16 @@ class PromptManager(ABC):
                 blob.upload_from_filename(str(file_path))
 
     def _download_gcs_to_dir(self, version: str, target_dir: Path) -> None:
-        """Download a specific version folder from GCS to a local directory."""
+        """
+        Download a specific version folder from GCS to a local directory.
+
+        Args:
+            version: Version number to download from GCS
+            target_dir: Local directory path where files should be downloaded
+
+        Raises:
+            ValueError: If GCS configuration is not properly set up
+        """
         gcs_client = self._get_gcs_client()
 
         bucket = gcs_client.bucket(self.gcs_bucket_name)
@@ -191,7 +251,10 @@ class PromptManager(ABC):
             keys: List of keys identifying the prompt
 
         Returns:
-            File path relative to the prompts/ folder (e.g., "customized/brand_1/metric_1.yaml")
+            str: File path relative to the prompts/ folder (e.g., "customized/brand_1/metric_1.yaml")
+
+        Raises:
+            NotImplementedError: This method must be implemented by subclasses
         """
         raise NotImplementedError(
             "get_prompt_file_path must be implemented by subclasses"
@@ -202,7 +265,7 @@ class PromptManager(ABC):
         List all available versions in GCS.
 
         Returns:
-            List of version numbers sorted in descending order
+            List[str]: List of version numbers sorted in descending order (most recent first)
 
         Raises:
             ValueError: If GCS is not configured
@@ -238,10 +301,10 @@ class PromptManager(ABC):
 
         Args:
             keys: List of keys identifying the prompt
-            version: Version to load ("local" for local directory, "latest" for most recent GCS version, or specific version number like "1.0")
+            version: Version to load ("local" for local directory, "latest" for most recent GCS version, or specific version number like "1.0.0")
 
         Returns:
-            Dictionary containing the parsed YAML content
+            Dict[str, Any]: Dictionary containing the parsed YAML content
 
         Raises:
             FileNotFoundError: If the prompt file is not found
@@ -273,7 +336,12 @@ class PromptManager(ABC):
             field: Optional field to extract from the YAML (e.g., "extraction_instructions")
 
         Returns:
-            String representation of the prompt or specific field
+            str: String representation of the prompt or specific field
+
+        Raises:
+            FileNotFoundError: If the prompt file is not found
+            ValueError: If version is not "local" but GCS is not configured, or if no versions exist when using "latest"
+            KeyError: If the specified field is not found in the prompt
         """
         prompt_data = self.load_prompt(keys, version)
 
@@ -295,7 +363,7 @@ class PromptManager(ABC):
             next_version_bump: Type of version bump ("major", "minor", or "patch")
 
         Returns:
-            The new version number that was created
+            str: The new version number that was created
 
         Raises:
             ValueError: If GCS is not configured
@@ -322,12 +390,13 @@ class PromptManager(ABC):
                     target_dir must be provided
 
         Returns:
-            Path to the directory where the snapshot was saved
+            str: Path to the directory where the snapshot was saved
 
         Raises:
             ValueError: If GCS is not configured, if replace=False and target_dir is None,
                        or if version is "latest" but no versions exist
             FileNotFoundError: If the specified version doesn't exist in GCS
+            FileExistsError: If target directory already exists when replace=False
         """
         gcs_client = self._get_gcs_client()
 

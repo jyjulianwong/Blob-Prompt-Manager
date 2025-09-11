@@ -3,9 +3,9 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "blob-prompt-manager"
+name = "prompt2blob-vm"
 version = "0.1.0"
-description = "A Blob Prompt Manager application."
+description = "A Prompt2Blob Version Manager application."
 authors = [
     { name = "Julian Wong", email = "julianwong2000@gmail.com" }
 ]

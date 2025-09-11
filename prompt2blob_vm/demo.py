@@ -1,13 +1,13 @@
-"""Demo script showing PromptManager usage with the existing prompt structure."""
+"""Demo script showing VersionManager usage with the existing prompt structure."""
 
 import os
 from datetime import datetime
 from typing import List
 
-from blob_prompt_manager.prompt_manager import PromptManager
+from prompt2blob_vm.version_manager import VersionManager
 
 
-class DemoPromptManager(PromptManager):
+class DemoPromptManager(VersionManager):
     """Demo implementation matching the existing prompt structure."""
 
     def get_prompt_file_path(self, keys: List[str]) -> str:

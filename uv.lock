@@ -43,7 +43,7 @@ wheels = [
 ]
 
 [[package]]
-name = "blob-prompt-manager"
+name = "prompt2blob-vm"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
